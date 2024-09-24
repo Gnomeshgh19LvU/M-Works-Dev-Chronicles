@@ -1,0 +1,929 @@
+---
+title: Docker从入门到入土详解与部署
+description: Docker是一个开源的容器引擎,可将应用程序和基础设施层隔离,并且能将基础设施当作程序一样进行管理。使用 Docker可更快地打包、测试以及部署应用程序,并可以缩短从编写到部署运行代码的周期。
+pubDate: 07 24 2024
+image: https://logos-world.net/wp-content/uploads/2021/02/Docker-Symbol.png
+categories:
+  - tech 
+  - life
+badge: Linux
+tags:
+  - Blog
+  - Project
+  - Markdown
+---
+
+import Collapse from "../../components/blog/collapse.astro";
+import Diff from "../../components/blog/diff.astro";
+import Error from "../../components/blog/error.astro";
+import Info from "../../components/blog/info.astro";
+import Kbd from "../../components/blog/kbd.astro";
+import Success from "../../components/blog/success.astro";
+import Warning from "../../components/blog/warning.astro";
+import TimeLine from "../../components/page/TimeLine.astro";
+import LinkCard from "../../components/page/LinkCard.astro";
+
+## 一、Docker简介
+
+![](https://logos-world.net/wp-content/uploads/2021/02/Docker-Symbol.png)
+
+
+
+
+
+Docker是一个开源的**容器引擎**，它有助于更快地交付应用。 Docker可将应用程序和基础设施层隔离，并且能将基础设施当作程序一样进行管理。**<u>使用 Docker可更快地打包、测试以及部署应用程序，并可以缩短从编写到部署运行代码的周期。</u>**
+Docker的优点如下：
+
+##### 1、简化程序
+
+Docker 让开发者可以打包他们的应用以及依赖包到一个可移植的容器中，然后发布到任何流行的 Linux 机器上，便可以实现虚拟化。Docker改变了虚拟化的方式，使开发者可以直接将自己的成果放入Docker中进行管理。方便快捷已经是 Docker的最大优势，过去需要用数天乃至数周的 任务，在Docker容器的处理下，只需要数秒就能完成。
+
+##### 2、节省开支
+
+一方面，云计算时代到来，使开发者不必为了追求效果而配置高额的硬件，Docker 改变了高性能必然高价格的思维定势。
+Docker 与云的结合，让云空间得到更充分的利用。不仅解决了硬件管理的问题，也改变了虚拟化的方式。
+
+#### Docker的架构
+
+![](https://ts1.cn.mm.bing.net/th/id/R-C.1774676184117a7651da679303f7f2a5?rik=tD8GxVFzILxUTA&riu=http%3a%2f%2fwww.yiibai.com%2fuploads%2fimages%2f201706%2f0206%2f262150629_86976.png&ehk=b08QZOJOFKWBBfczWiSLKjdCb8XG5Ow2kHoxAUT2F%2fI%3d&risl=&pid=ImgRaw&r=0&sres=1&sresct=1)
+
+- **Docker daemon（ Docker守护进程）**
+
+Docker daemon是一个运行在宿主机（ DOCKER-HOST）的后台进程。可通过 Docker客户端与之通信。
+
+- **Client（ Docker客户端）**
+
+Docker客户端是 Docker的用户界面，它可以接受用户命令和配置标识，并与 Docker daemon通信。图中， docker build等都是 Docker的相关命令。
+
+- **Images（ Docker镜像）**
+
+Docker镜像是一个只读模板，它包含创建 Docker容器的说明。**它和系统安装光盘有点像**，使用系统安装光盘可以安装系
+统，同理，使用Docker镜像可以运行 Docker镜像中的程序。
+
+- **Container（容器**）
+
+容器是镜像的可运行实例。**镜像和容器的关系有点类似于面向对象中，类和对象的关系**。可通过 Docker API或者 CLI命令来启停、移动、删除容器。
+
+- **Registry**
+
+Docker Registry是一个集中存储与分发镜像的服务。构建完 Docker镜像后，就可在当前宿主机上运行。但如果想要在其他机器上运行这个镜像，就需要手动复制。此时可借助 Docker Registry来避免镜像的手动复制。
+一个 Docker Registry可包含多个 Docker仓库，每个仓库可包含多个镜像标签，每个标签对应一个 Docker镜像。这跟Maven的仓库有点类似，如果把 Docker Registry比作 Maven仓库的话，那么 Docker仓库就可理解为某jar包的路径，而镜像标签则可理解为jar包的版本号。
+Docker Registry可分为公有Docker Registry和私有Docker Registry。 最常⽤的Docker Registry莫过于官⽅的DockerHub， 这也是默认的Docker Registry。 Docker Hub上存放着⼤量优秀的镜像， 我们可使⽤Docker命令下载并使⽤。
+
+## 二、Docker的安装
+
+Docker 是一个开源的商业产品，有两个版本：社区版（Community Edition，缩写为 CE）和企业版（Enterprise Edition，缩
+写为 EE）。企业版包含了一些收费服务，个人开发者一般用不到。下面的介绍都针对社区版。
+Docker CE 的安装请参考官方文档，我们这里以CentOS为例：
+
+##### 1、Docker 要求 CentOS 系统的内核版本高于 3.10
+
+通过 uname -r 命令查看你当前的内核版本
+
+```bash
+uname -r
+```
+
+##### 2、使用 root 权限登录 Centos。确保 yum 包更新到最新。
+
+```bash
+yum ‐y update
+```
+
+##### 3、卸载旧版本(如果安装过旧版本的话)
+
+```bash
+sudo yum remove ‐y docker*
+```
+
+##### 4、安装需要的软件包， yum-util 提供yum-config-manager功能，另外两个是devicemapper驱动依赖的
+
+```bash
+yum install ‐y yum‐utils
+```
+
+##### 5、设置yum源，并更新 yum 的包索引
+
+```bash
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+```
+
+```bash
+yum makecache fast
+```
+
+##### 6、可以查看所有仓库中所有docker版本，并选择特定版本安装
+
+```bash
+yum list docker‐ce ‐‐showduplicates | sort ‐r
+```
+
+(现在最好选择最新版)
+
+##### 7、安装docker
+
+```bash
+yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+##### 8、启动并加入开机启动
+
+```bash
+systemctl start docker && systemctl enable docker
+
+```
+
+```bash
+# 启动docker
+systemctl start docker
+# 停止docker
+systemctl stop docker
+# 重启docker
+systemctl restart docker
+# 设置开机自启
+systemctl enable docker
+# 执行docker ps 命令，如果不报错，则说明安装启动成功
+docekr ps
+
+```
+
+##### 9、验证安装是否成功(有client和service两部分表示docker安装启动都成功了)
+
+```bash
+ docker version
+
+```
+
+![1](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/1.png)
+
+**注意：一般需要配置docker镜像加速器**
+我们可以借助阿里云的镜像加速器，登录阿里云(https://cr.console.aliyun.com/#/accelerator)
+可以看到镜像加速地址如下图：
+
+![2](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/2.1.png)
+
+
+
+```bash
+ cd /etc/docker
+```
+
+查看有没有 daemon.json。这是docker默认的配置文件。
+如果没有新建，如果有，则修改。
+
+```bash
+ vim daemon.json
+```
+
+为了确保我们可以正常获取到镜像（防止aliyun的镜像找不到我们所想要的）
+
+我们多配置其他源
+
+```bash
+{
+    "registry-mirrors":
+    [
+    	## 下面是在网上找的其他的镜像加速器，以防止阿里云官方dockerhub找不到我们想要的镜像或版本
+        "https://do.nark.eu.org",
+        "https://dc.j8.work",
+        "https://docker.m.daocloud.io",
+        "https://dockerproxy.com",
+        "https://docker.mirrors.ustc.edu.cn",
+        "https://docker.nju.edu.cn",
+        ## 下面这个换成你在阿里云官方的镜像加速器，每个人的都不一样
+        "https://ali.mirror.aliyuncs.com" 
+    ]
+}
+```
+
+如果没有新建
+
+```bash
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+    "registry-mirrors":
+    [
+        "https://do.nark.eu.org",
+        "https://dc.j8.work",
+        "https://docker.m.daocloud.io",
+        "https://dockerproxy.com",
+        "https://docker.mirrors.ustc.edu.cn",
+        "https://docker.nju.edu.cn",
+        "https://ali.mirror.aliyuncs.com" 
+    ]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+**随后我们在查看我们是否配置成功**
+
+```bash
+cd /etc/docker
+ll
+cat daemon.json
+```
+
+![3](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/3.1.png)
+
+##### 10、卸载docker
+
+```bash
+yum remove ‐y docker\*
+rm ‐rf /etc/systemd/system/docker.service.d
+rm ‐rf /var/lib/docker
+rm ‐rf /var/run/docker
+```
+
+## 三、Docker常用命令
+
+**镜像相关命令**
+
+##### 1、搜索镜像
+
+可使用 docker search命令搜索存放在 Docker Hub中的镜像。执行该命令后， Docker就会在Docker Hub中搜索含有 java这个关键词的镜像仓库。
+
+```bash
+ docker search java
+```
+
+![4](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/4.png)
+
+以上列表包含五列，含义如下：
+
+\- **NAME**:镜像仓库名称。
+
+\- **DESCRIPTION**:镜像仓库描述。
+
+\- **STARS**：镜像仓库收藏数，表示该镜像仓库的受欢迎程度，类似于 GitHub的 stars0
+
+\- **OFFICAL**:表示是否为官方仓库，该列标记为[0K]的镜像均由各软件的官方项目组创建和维护。
+
+\- **AUTOMATED**：表示是否是自动构建的镜像仓库。
+
+##### 2、下载镜像
+
+使用命令docker pull命令即可从 Docker Registry上下载镜像，执行该命令后，Docker会从 Docker Hub中的 java仓库下载最新版本的 Java镜像。如果要下载指定版本则在java后面加冒号指定版本，例如：docker pull java:8
+
+```bash
+docker pull openjdk:8
+```
+
+```bash
+docker pull nginx
+```
+
+![5](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/5.png)
+
+##### 3、列出镜像
+
+```bash
+docker images
+```
+
+![6](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/6.png)
+
+以上列表含义如下
+\- **REPOSITORY**：镜像所属仓库名称。
+\- **TAG**:镜像标签。默认是 latest,表示最新。
+\- **IMAGE** ID：镜像 ID，表示镜像唯一标识。
+\- **CREATED**：镜像创建时间。
+\- **SIZE**: 镜像大小。
+
+##### 4、删除本地镜像
+
+使用 docker rmi命令即可删除指定镜像，强制删除加 -f
+
+```bash
+docker rmi java
+```
+
+删除所有镜像
+
+```bash
+1 docker rmi $(docker images -q)
+```
+
+#### 容器相关命令
+
+##### 1、新建并启动容器
+
+使用以下docker run命令即可新建并启动一个容器，该命令是最常用的命令，它有很多选项，下面将列举一些常用的选项。
+
+- -d选项：表示后台运行
+
+- \-P选项：随机端口映射
+
+- \-p选项：指定端口映射，有以下四种格式。
+
+- \-- ip:hostPort:containerPort
+
+- \-- ip::containerPort
+
+- \-- hostPort:containerPort
+
+- \-- containerPort
+
+  - --net选项：指定网络模式，该选项有以下可选参数：
+
+  - --net=bridge:默认选项，表示连接到默认的网桥。
+
+  - --net=host:容器使用宿主机的网络。
+
+  - --net=container:NAME-or-ID：告诉 Docker让新建的容器使用已有容器的网络配置。
+
+  - --net=none：不配置该容器的网络，用户可自定义网络配置。
+
+    ```bash
+     docker run --name nginx -d -p 91:80 nginx
+    ```
+
+    这样就能启动一个 Nginx容器。在本例中，为 docker run添加了两个参数，含义如下：
+    -d 后台运行
+    -p 宿主机端口:容器端口 #开放容器端口到宿主机端口
+    访问 http://Docker宿主机 IP:91/，将会看到nginx的主界面：
+
+![7](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/7.png)
+
+**需要注意的是，使用 docker run命令创建容器时，会先检查本地是否存在指定镜像。如果本地不存在该名称的镜像， Docker就会自动从 Docker Hub下载镜像并启动一个 Docker容器。**
+
+
+
+**如果在run的时候出现一下问题，那问题可能是 '-' '-' 的区别(中英文)**
+
+![8](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/8.png)
+
+
+
+##### 2、列出容器
+
+用 docker ps命令即可列出**运行中**的容器
+
+```bash
+docker ps
+```
+
+![9](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/9.png)
+
+如需列出所有容器（包括已停止的容器），可使用-a参数。该列表包含了7列，含义如下
+
+- **CONTAINER_ID**：表示容器 ID。
+- **IMAGE**:表示镜像名称。
+- **COMMAND**：表示启动容器时运行的命令。
+- **CREATED**：表示容器的创建时间。
+- **STATUS**：表示容器运行的状态。UP表示运行中， Exited表示已停止。
+- **PORTS**:表示容器对外的端口号。
+- **NAMES**:表示容器名称。该名称默认由 Docker自动生成，也可使用 docker run命令的--name选项自行指定。
+
+##### 3、停止容器
+
+使用 docker stop命令，即可停止容器
+
+```bash
+docker stop b7f5357d15f3
+```
+
+其中f0b1c8ab3633是容器 ID,当然也可使用 docker stop容器名称来停止指定容器
+
+##### 4、强制停止容器
+
+可使用 docker kill命令发送 SIGKILL信号来强制停止容器
+
+```bash
+docker kill b7f5357d15f3
+```
+
+##### 5、启动已停止的容器
+
+使用docker run命令，即可新建并启动一个容器。对于已停止的容器，可使用 docker start命令来启动
+
+```bash
+docker start b7f5357d15f3
+```
+
+##### 6、查看容器所有信息
+
+```bash
+docker inspect b7f5357d15f3
+```
+
+##### 7、查看容器日志
+
+```bash
+docker container logs f0b1c8ab3633
+```
+
+##### 8、查看容器里的进程
+
+```bash
+1 docker top b7f5357d15f3
+```
+
+##### 9、容器与宿主机相互复制文件
+
+- **docker cp 容器id:要拷贝的文件在容器里面的路径 宿主机的相应路径**
+
+```bash
+docker cp b7f5357d15f3:/etc/nginx/nginx.conf /data/nginx
+```
+
+- **从宿主机拷文件到容器里面**
+
+```bash
+ docker cp 要拷贝的宿主机文件路径 容器id:要拷贝到容器里面对应的路径
+```
+
+##### 10、进入容器
+
+使用docker exec命令用于进入一个正在运行的docker容器。如果docker run命令运行容器的时候，没有使用-it参数，就要用这个命令进入容器。一旦进入了容器，就可以在容器的 Shell 执行命令了
+
+```bash
+docker exec -it b7f5357d15f3 /bin/bash 
+# (有的容器需要把 /bin/bash 换成 sh)
+```
+
+##### 11、容器内安装vim、ping、ifconfig等指令
+
+```bash
+apt-get update
+apt-get install vim # 安装vim
+apt-get install iputils-ping # 安装ping
+apt-get install net-tools # 安装ifconfig
+
+apt-get update && apt-get install -y vim iputils-ping net-tools
+```
+
+##### 12、删除容器
+
+使用 docker rm命令即可删除指定容器
+
+```bash
+docker rm b7f5357d15f3
+```
+
+该命令只能删除**已停止**的容器，如需删除正在运行的容器，可使用-f参数
+强制删除所有容器
+
+```bash
+docker rm -f $(docker ps ‐a ‐q)
+```
+
+强制删除某一个容器
+
+```bash
+docker rm -f b7f5357d15f3
+```
+
+##### 13、Linux小技巧
+
+当你不想 docker ps || docker images 每次都懒得输入这么多的时候，可以配置Linux的快捷键
+
+```bash
+# 第一步
+vi ~/.bashrc
+# 进入后添加
+alias dps='docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Names}}\t{{.Ports}}\t{{.Status}}"'
+alias dis='docker images'
+# 最后一步
+source ~/.bashrc
+```
+
+![10](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/10.png)
+
+![11](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/11.png)
+
+
+
+##### 14、清理docker缓存
+
+有时 Docker 的缓存可能会导致问题，可以尝试清理未完成的下载和缓存：
+
+```bash
+docker system prune -a
+
+```
+
+##### 15、更改容器名称
+
+```bash
+docker tag seataio/seata-server seata
+```
+
+
+
+## 四、Docker数据卷
+
+**数据卷**是一个虚拟目录，他将宿主机目录映射到容器内目录，方便我们操作容器内文件，或者方便迁移容器产生的数据
+
+**数据卷**是一个可供一个或多个容器使用的特殊目录，它绕过 UFS，可以提供很多有用的特性：
+
+- 数据卷可以在容器之间共享和重用
+- 对数据卷的修改会立马生效
+- 对数据卷 的更新，不会影响镜像
+- 数据卷默认会一直存在，即使容器被删除
+
+**注意：数据卷的使用，类似于 Linux 下对目录或文件进行 mount，镜像中的被指定为挂载点的目录中的文件会复制到数据卷中（仅数据卷为空时会复制）。**
+
+
+
+##### 1、创建数据卷
+
+在用 `docker run` 命令的时候，使用 `-v` 标记来创建一个数据卷并挂载到容器里。在一次 run 中多次使用可以挂载多个数据卷。
+
+下面创建一个 web 容器，并加载一个数据卷到容器的 `/webapp` 目录。
+
+```bash
+docker run -d -P --name web -v /webapp training/webapp python app.py
+```
+
+**注意：也可以在 Dockerfile 中使用 `VOLUME` 来添加一个或者多个新的卷到由该镜像创建的任意容器。**
+
+##### 2、挂载数据卷
+
+使用 `-v` 标记也可以指定挂载一个本地主机的目录到容器中去。
+
+```bash
+docker run -d -P --name web -v /src/webapp:/opt/webapp training/webapp python app.py
+```
+
+上面的命令加载主机的 `/src/webapp` 目录到容器的 `/opt/webapp` 目录。这个功能在进行测试的时候十分方便，比如用户可以放置一些程序到本地目录中，来查看容器是否正常工作。本地目录的路径必须是绝对路径，如果目录不存在 Docker 会自动为你创建它。
+
+**注意：Dockerfile 中不支持这种用法，这是因为 Dockerfile 是为了移植和分享用的。然而，不同操作系统的路径格式不一样，所以目前还不能支持。**
+
+
+
+Docker 挂载数据卷的默认权限是读写，用户也可以通过 `:ro` 指定为只读。
+
+```bash
+docker run -d -P --name web -v /src/webapp:/opt/webapp:ro
+training/webapp python app.py
+```
+
+加了 `:ro` 之后，就挂载为只读了。
+
+`-v` 标记也可以从主机挂载单个文件到容器中
+
+```bash
+docker run --rm -it -v ~/.bash_history:/.bash_history ubuntu /bin/bash
+```
+
+这样就可以记录在容器输入linux的命令了。
+
+
+
+##### 3、常用镜像容器的数据卷挂载
+
+**仅供参考**
+
+**mysql**
+
+- 3.1、创建本地目录
+
+  首先，在主机上创建一个目录，用于存放 MySQL 的配置文件。例如，创建一个名为 `data/local/mysql` 的目录，用于存放 MySQL 的配置文件。
+
+  ```bash
+  mkdir -p /data/local/mysql/conf
+  mkdir -p /data/local mysql/data
+  ```
+
+- 3.2、拉取mysql镜像
+
+  ```bash
+  docker pull mysql:8.0.34
+  ```
+
+- 3.3、启动mysql容器
+
+  ```bash
+  docker run -d \
+  --name mysql \
+  --restart=always \
+  -p 3306:3306 \
+  -e TZ=Asia/Shanghai \
+  -e MYSQL_ROOT_PASSWORD=123456 \
+  -v /data/local/mysql/data:/var/lib/mysql \
+  -v /data/local/mysql/conf:/etc/mysql/conf.d \
+  mysql:8.0.34
+  ```
+
+  - **--name** 指定容器名称，
+  - **-v /path/to/mysql:/etc/mysql/conf.d**将主机的 `mysql` 目录挂载到容器内的 `/etc/mysql/conf.d` 目录，
+  - **-v /path/to/mysql/data:/var/lib/mysql** 将主机的 `mysql/data` 目录挂载到容器内的 `/var/lib/mysql` 目录，
+  - **-e MYSQL_ROOT_PASSWORD=123456** 指定 MySQL 的 root 用户的密码，
+  - **-d** 表示以后台模式启动容器，
+  - **-p 3306:3306 **将容器的 3306 [端口映射](https://so.csdn.net/so/search?q=%E7%AB%AF%E5%8F%A3%E6%98%A0%E5%B0%84&spm=1001.2101.3001.7020)到主机的 3306 端口。
+  - **--restart=always** 设置开机自启
+  - **-e TZ=Asia/Shanghai** 设置时区
+
+- 3.4、连接 MySQL
+
+  ![12](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/12.png)
+
+
+
+**redis**
+
+```bash
+## 创建目录
+mkdir -p /data/local/redis/conf
+mkdir -p /data/local/redis/data
+
+## 创建文件
+touch /data/local/redis/conf/redis.conf
+
+docker pull redis
+
+docker run \
+--restart=always \
+--log-opt max-size=100m \
+--log-opt max-file=2 \
+-p 6379:6379 \
+--name redis \
+-v /data/local/redis/conf/redis.conf:/etc/redis/redis.conf  \
+-v /data/local/redis/data:/data \
+-d redis redis-server /etc/redis/redis.conf \
+--appendonly yes \
+--requirepass 123456 
+
+# 修改 /data/local/redis/conf/redis.conf
+protected-mode no
+bind 0.0.0.0
+
+# 重启
+docker restart redis
+```
+
+- **--restart=always**:如果容器退出，这个选项会使得它自动重启
+- **--log-opt max-size=100m**:这是对容器日志的设置，最大大小为 100MB
+- **--log-opt max-file=2**:这是对容器日志文件的设置，最多可以有2个日志文件
+- **-p 6379:6379**:这是端口映射的设置，将宿主机的6379端口映射到容器的6379端口
+- **-v /data/local/redis.conf:/etc/redis/redis.conf**:这是对容器内的文件系统的挂载设置，将宿主机上的 /data/local/redis.conf 文件挂载到容器内的 /etc/redis/redis.conf 位置
+- **-v /data/local/data:/data**:这是另一个文件系统的挂载选项，将宿主机上的 /data/local/data 目录挂载到容器内的 /data目录
+- **-d**:这是 Docker 的分离模式，新创建的进程将会在后台运行
+- **redis redis-server /data/local/redis/redis.conf --appendonly yes --requirepass 123456**:这是容器内要运行的命令，启动 Redis 服务，使用 /data/local/redis/redis.conf 配置文件，设置追加写入(appendonly)为 yes，设置密码为 "123456"     ( 密码可自行更改)
+- **protected-mode no**:关闭protected-mode模式，此时外部网络可以直接访问 (docker貌似自动开启了)
+- **bind 0.0.0.0**:设置所有IP都可以访问 (docker貌似自动开启了)
+
+------
+
+**nginx**
+
+```bash
+mkdir -p /data/local/nginx
+
+docker run --name nginx -d -p 80:80 nginx
+
+docker cp nginx:/etc/nginx/nginx.conf /data/local/nginx
+docker cp nginx:/var/log/nginx /data/local/nginx
+docker cp nginx:/etc/nginx/conf.d /data/local/nginx
+docker cp nginx:/usr/share/nginx/html /data/local/nginx
+
+docker rm -f nginx
+
+docker run \
+-p 80:80 \
+--name nginx \
+--restart=always \
+-v /data/local/nginx/nginx.conf:/etc/nginx/nginx.conf \
+-v /data/local/nginx/conf.d:/etc/nginx/conf.d \
+-v /data/local/nginx/html:/usr/share/nginx/html \
+-v /data/local/nginx/log:/var/log/nginx \
+-d \
+nginx
+```
+
+------
+
+**nacos**
+
+```bash
+# 第一步：创建conf,logs,data目录
+mkdir -p /data/local/nacos/{conf,logs,data}
+# 启动临时镜像
+docker run -p 8848:8848 --name nacos -d nacos/nacos-server:v2.3.0
+# CP容器的conf,logs,data到宿主
+docker cp nacos:/home/nacos/conf /data/local/nacos
+docker cp nacos:/home/nacos/data /data/local/nacos
+docker cp nacos:/home/nacos/logs /data/local/nacos
+# 赋予文件权限
+chmod 777 /data/local/nacos/{conf,logs,data}
+# 删除容器
+docker rm -f nacos
+
+
+docker run -d --name nacos \
+-p 8848:8848  -p 9848:9848 -p 9849:9849 \
+--privileged=true \
+-e JVM_XMS=256m -e JVM_XMX=256m -e MODE=standalone \
+-v /data/local/nacos/logs/:/home/nacos/logs \
+-v /data/local/nacos/conf/:/home/nacos/conf/ \
+--restart=always nacos/nacos-server:v2.3.0
+
+
+docker restart nacos
+```
+
+------
+
+目前不知道怎么回事，与elasticsearch有关的镜像都拉取不下来这个问题我没办法解决
+
+```bash
+docker pull elasticsearch:7.7.1
+ 
+docker pull kibana:7.7.1
+
+
+docker run -d \
+--name elasticsearch \
+-e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
+-e "discovery.type=single-node" \
+-e "http.host=0.0.0.0" \
+-v /data/local/elasticsearch/data:/usr/share/elasticsearch/data \
+-v /data/local/elasticsearch/plugins:/usr/share/elasticsearch/plugins \
+-v /data/local/elasticsearch/logs:/usr/share/elasticsearch/logs \
+--privileged \
+-p 9200:9200 \
+-p 9300:9300 \
+elasticsearch:7.7.1
+```
+
+------
+
+------
+
+**RabbitMQ**
+
+```bash
+# 拉取docker镜像
+docker pull rabbitmq:management
+```
+
+```bash
+mkdir -p /data/local/rabbitmq
+```
+
+```bash
+docker run -id --name=rabbitmq \
+-v /data/local/rabbitmq:/var/lib/rabbitmq \
+-p 15672:15672 -p 5672:5672 \
+-e RABBITMQ_DEFAULT_USER=admin \
+--restart=always \
+-e RABBITMQ_DEFAULT_PASS=admin rabbitmq:management
+```
+
+------
+
+**RockeMq**
+
+```bash
+docker pull apache/rocketmq
+```
+
+```bash
+docker run -d \
+--restart=always \
+--name rmqnamesrv \
+--privileged=true \
+-p 9876:9876 \
+-v /usr/local/rocketmq/data/namesrv/logs:/root/logs \
+-v /usr/local/rocketmq/data/namesrv/store:/root/store \
+-e "MAX_POSSIBLE_HEAP=100000000" \
+-e "JAVA_OPT_EXT=-Xms512M -Xmx512M -Xmn128m" \
+apache/rocketmq \
+sh mqnamesrv
+```
+
+------
+
+**seata**
+
+docker pull seataio/seata-server:1.7.1
+
+zipkin
+
+```
+docker pull openzipkin/zipkin
+```
+
+**Minio**
+
+```bash
+docker pull minio/minio
+
+mkdir -p /data/local/minio/data
+mkdir -p /data/local/minio/config
+
+docker run -p 9000:9000 -p 9090:9090 \
+--name minio \
+-d --restart=always \
+-e "MINIO_ACCESS_KEY=minioadmin" \
+-e "MINIO_SECRET_KEY=minioadmin" \
+-v /data/local/minio/data:/data \
+-v /data/local/minio/config:/root/.minio \
+minio/minio server /data \
+--console-address ":9090" --address ":9000"
+
+ 
+```
+
+
+
+## 五、Dockerfile使用
+
+**elasticsearch**
+
+##### 1、下载镜像并解压
+
+```bash
+tar -zxvf elasticsearch-7.7.1-linux-x86_64.tar.gz
+```
+
+![13](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/13.png)
+
+##### 2、创建Dockerfile
+
+必须是**Dockerfile**这么写(文件名不可以改变，若要改变则必须声明改变后的名称)
+
+```bash
+FROM scratch
+# 复制解压后的 Elasticsearch 文件到容器的指定目录
+COPY elasticsearch-7.7.1 /usr/share/elasticsearch
+# 设置工作目录
+WORKDIR /usr/share/elasticsearch
+# 暴露 Elasticsearch 默认端口
+EXPOSE 9200 9300
+# 设置 Elasticsearch 环境变量
+ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
+ENV discovery.type=single-node
+ENV http.host=0.0.0.0
+# 启动 Elasticsearch
+CMD ["bin/elasticsearch"]
+```
+
+##### 3、在当前目录下运行运行
+
+**/data/local/elasticsearch**   
+
+```bash
+# 在当前目录下构建镜像，并命名为 elasticsearch
+cd /data/local/elasticsearch
+docker build -t elasticsearch:7.7.1 .
+# 不要忘记最后一个点 '.' 并且点之前有一个空格
+```
+
+运行docker容器
+
+```bash
+docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 elasticsearch:7.7.1
+```
+
+验证 Elasticsearch 是否运行
+
+访问 `访问 http://Docker宿主机 IP:9200/，` 来验证 Elasticsearch 是否正在运行：
+
+```bash
+# 使用 curl 命令测试（可选）
+curl http://localhost:9200
+# 也可以直接在主机上访问
+http://Docker宿主机 IP:9200/
+```
+
+------
+
+![14](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/14.png)
+
+**kibana**
+
+```bash
+cd /data/local/kibana/
+tar -zxvf kibana-7.7.1-linux-x86_64.tar.gz
+```
+
+```bash
+cd /data/local/kibana/
+vi Dockerfile
+```
+
+```bash
+FROM scratch
+COPY kibana-7.7.1 /usr/share/kibana
+WORKDIR /usr/share/kibana
+EXPOSE 5601
+ENV SERVER_HOST="0.0.0.0"
+CMD ["bin/kibana"]
+```
+
+```bash
+cd /data/local/kibana
+docker build -t kibana:7.7.1 .
+```
+
+```bash
+docker run -d --name kibana -p 5601:5601 kibana:7.7.1
+```
+
+## 六、docker网络
+
+**网络看不懂~自个儿学去吧~**
