@@ -73,7 +73,7 @@ export const menuItems = [
   {
     id: "contact",
     text: "联系",
-    href: "mailto:contact.evesunmaple@outlook.com", // Contact email
+    href: "https://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=OAkODgoADQENCQx4SUkWW1dV", // Contact email
     target: "_blank", // Open in a new tab
     svg: "contact",
   },
@@ -82,27 +82,33 @@ export const menuItems = [
 // Social media and contact icons
 export const socialIcons = [
   {
-    href: "https://afdian.net/a/saroprock",
-    ariaLabel: "Support my work",
-    title: "Support my work",
-    svg: "support",
-  },
-  {
     href: "https://github.com/Gnomeshgh19LvU",
     ariaLabel: "Github",
     title: "Github",
     svg: "github",
   },
   {
-    href: "https://space.bilibili.com/1796832871",
-    ariaLabel: "BiliBili",
-    title: "BiliBili",
-    svg: "bilibili",
+    href: "https://maaaa.oss-cn-nanjing.aliyuncs.com/blog/Wechat-contact.jpg",
+    ariaLabel: "WeChat",
+    title: "WeChat",
+    svg: "MdiWechat",
   },
   {
-    href: "/rss.xml",
-    ariaLabel: "RSS Feed",
-    title: "RSS Feed",
-    svg: "rss",
+    href: "https://res.abeim.cn/api/qq/?qq=1662859514",
+    ariaLabel: "QQ",
+    title: "QQ",
+    svg: "MingcuteQqFill",
+  },
+  {
+    href: "https://gitee.com/Maaaashifu",
+    ariaLabel: "Gitee",
+    title: "Gitee",
+    svg: "SimpleIconsGitee",
+  },
+  {
+    href: "https://space.bilibili.com/1796832871",
+    ariaLabel: "Bilibili",
+    title: "Bilibili",
+    svg: "bilibili",
   },
 ];
