@@ -22,6 +22,11 @@ import Warning from "../../components/blog/warning.astro";
 import TimeLine from "../../components/page/TimeLine.astro";
 import LinkCard from "../../components/page/LinkCard.astro";
 
+
+
+
+
+
 ## 一、Docker简介
 
 ![](https://logos-world.net/wp-content/uploads/2021/02/Docker-Symbol.png)
@@ -106,7 +111,6 @@ yum install ‐y yum‐utils
 ```bash
 yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 ```
-
 ```bash
 yum makecache fast
 ```
@@ -129,7 +133,6 @@ yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 
 ```bash
 systemctl start docker && systemctl enable docker
-
 ```
 
 ```bash
@@ -143,14 +146,12 @@ systemctl restart docker
 systemctl enable docker
 # 执行docker ps 命令，如果不报错，则说明安装启动成功
 docekr ps
-
 ```
 
 ##### 9、验证安装是否成功(有client和service两部分表示docker安装启动都成功了)
 
 ```bash
  docker version
-
 ```
 
 ![1](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/1.png)
@@ -311,29 +312,22 @@ docker rmi java
 
 使用以下docker run命令即可新建并启动一个容器，该命令是最常用的命令，它有很多选项，下面将列举一些常用的选项。
 
-- -d选项：表示后台运行
+* -d选项：表示后台运行
+* \-P选项：随机端口映射
+* \-p选项：指定端口映射，有以下四种格式。
+* \-- ip:hostPort:containerPort
+* \-- ip::containerPort
+* \-- hostPort:containerPort
+* \-- containerPort
+  * --net选项：指定网络模式，该选项有以下可选参数：
 
-- \-P选项：随机端口映射
+  * --net=bridge:默认选项，表示连接到默认的网桥。
 
-- \-p选项：指定端口映射，有以下四种格式。
+  * --net=host:容器使用宿主机的网络。
 
-- \-- ip:hostPort:containerPort
+  * --net=container:NAME-or-ID：告诉 Docker让新建的容器使用已有容器的网络配置。
 
-- \-- ip::containerPort
-
-- \-- hostPort:containerPort
-
-- \-- containerPort
-
-  - --net选项：指定网络模式，该选项有以下可选参数：
-
-  - --net=bridge:默认选项，表示连接到默认的网桥。
-
-  - --net=host:容器使用宿主机的网络。
-
-  - --net=container:NAME-or-ID：告诉 Docker让新建的容器使用已有容器的网络配置。
-
-  - --net=none：不配置该容器的网络，用户可自定义网络配置。
+  * --net=none：不配置该容器的网络，用户可自定义网络配置。
 
     ```bash
      docker run --name nginx -d -p 91:80 nginx
@@ -422,7 +416,8 @@ docker container logs f0b1c8ab3633
 
 ##### 9、容器与宿主机相互复制文件
 
-- **docker cp 容器id:要拷贝的文件在容器里面的路径 宿主机的相应路径**
+-  **docker cp 容器id:要拷贝的文件在容器里面的路径 宿主机的相应路径**
+
 
 ```bash
 docker cp b7f5357d15f3:/etc/nginx/nginx.conf /data/nginx
@@ -501,7 +496,6 @@ source ~/.bashrc
 
 ```bash
 docker system prune -a
-
 ```
 
 ##### 15、更改容器名称
@@ -513,6 +507,11 @@ docker tag seataio/seata-server seata
 
 
 ## 四、Docker数据卷
+
+- Docker 容器删除后，在容器中产生的数据也会随之销毁，类似删库跑路，不安全
+- Docker 容器怎么和外部机器交换文件
+- 容器之间怎么进行数据交互
+- 解决：使用数据卷
 
 **数据卷**是一个虚拟目录，他将宿主机目录映射到容器内目录，方便我们操作容器内文件，或者方便迁移容器产生的数据
 
@@ -527,309 +526,401 @@ docker tag seataio/seata-server seata
 
 
 
-##### 1、创建数据卷
-
-在用 `docker run` 命令的时候，使用 `-v` 标记来创建一个数据卷并挂载到容器里。在一次 run 中多次使用可以挂载多个数据卷。
-
-下面创建一个 web 容器，并加载一个数据卷到容器的 `/webapp` 目录。
-
-```bash
-docker run -d -P --name web -v /webapp training/webapp python app.py
-```
-
-**注意：也可以在 Dockerfile 中使用 `VOLUME` 来添加一个或者多个新的卷到由该镜像创建的任意容器。**
-
-##### 2、挂载数据卷
-
-使用 `-v` 标记也可以指定挂载一个本地主机的目录到容器中去。
-
-```bash
-docker run -d -P --name web -v /src/webapp:/opt/webapp training/webapp python app.py
-```
-
-上面的命令加载主机的 `/src/webapp` 目录到容器的 `/opt/webapp` 目录。这个功能在进行测试的时候十分方便，比如用户可以放置一些程序到本地目录中，来查看容器是否正常工作。本地目录的路径必须是绝对路径，如果目录不存在 Docker 会自动为你创建它。
-
-**注意：Dockerfile 中不支持这种用法，这是因为 Dockerfile 是为了移植和分享用的。然而，不同操作系统的路径格式不一样，所以目前还不能支持。**
-
-
-
-Docker 挂载数据卷的默认权限是读写，用户也可以通过 `:ro` 指定为只读。
-
-```bash
-docker run -d -P --name web -v /src/webapp:/opt/webapp:ro
-training/webapp python app.py
-```
-
-加了 `:ro` 之后，就挂载为只读了。
-
-`-v` 标记也可以从主机挂载单个文件到容器中
-
-```bash
-docker run --rm -it -v ~/.bash_history:/.bash_history ubuntu /bin/bash
-```
-
-这样就可以记录在容器输入linux的命令了。
-
-
-
-##### 3、常用镜像容器的数据卷挂载
-
-**仅供参考**
-
-**mysql**
-
-- 3.1、创建本地目录
-
-  首先，在主机上创建一个目录，用于存放 MySQL 的配置文件。例如，创建一个名为 `data/local/mysql` 的目录，用于存放 MySQL 的配置文件。
-
-  ```bash
-  mkdir -p /data/local/mysql/conf
-  mkdir -p /data/local mysql/data
-  ```
-
-- 3.2、拉取mysql镜像
-
-  ```bash
-  docker pull mysql:8.0.34
-  ```
-
-- 3.3、启动mysql容器
-
-  ```bash
-  docker run -d \
-  --name mysql \
-  --restart=always \
-  -p 3306:3306 \
-  -e TZ=Asia/Shanghai \
-  -e MYSQL_ROOT_PASSWORD=123456 \
-  -v /data/local/mysql/data:/var/lib/mysql \
-  -v /data/local/mysql/conf:/etc/mysql/conf.d \
-  mysql:8.0.34
-  ```
-
-  - **--name** 指定容器名称，
-  - **-v /path/to/mysql:/etc/mysql/conf.d**将主机的 `mysql` 目录挂载到容器内的 `/etc/mysql/conf.d` 目录，
-  - **-v /path/to/mysql/data:/var/lib/mysql** 将主机的 `mysql/data` 目录挂载到容器内的 `/var/lib/mysql` 目录，
-  - **-e MYSQL_ROOT_PASSWORD=123456** 指定 MySQL 的 root 用户的密码，
-  - **-d** 表示以后台模式启动容器，
-  - **-p 3306:3306 **将容器的 3306 [端口映射](https://so.csdn.net/so/search?q=%E7%AB%AF%E5%8F%A3%E6%98%A0%E5%B0%84&spm=1001.2101.3001.7020)到主机的 3306 端口。
-  - **--restart=always** 设置开机自启
-  - **-e TZ=Asia/Shanghai** 设置时区
-
-- 3.4、连接 MySQL
-
-  ![12](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/12.png)
-
-
-
-**redis**
-
-```bash
-## 创建目录
-mkdir -p /data/local/redis/conf
-mkdir -p /data/local/redis/data
-
-## 创建文件
-touch /data/local/redis/conf/redis.conf
-
-docker pull redis
-
-docker run \
---restart=always \
---log-opt max-size=100m \
---log-opt max-file=2 \
--p 6379:6379 \
---name redis \
--v /data/local/redis/conf/redis.conf:/etc/redis/redis.conf  \
--v /data/local/redis/data:/data \
--d redis redis-server /etc/redis/redis.conf \
---appendonly yes \
---requirepass 123456 
-
-# 修改 /data/local/redis/conf/redis.conf
-protected-mode no
-bind 0.0.0.0
-
-# 重启
-docker restart redis
-```
-
-- **--restart=always**:如果容器退出，这个选项会使得它自动重启
-- **--log-opt max-size=100m**:这是对容器日志的设置，最大大小为 100MB
-- **--log-opt max-file=2**:这是对容器日志文件的设置，最多可以有2个日志文件
-- **-p 6379:6379**:这是端口映射的设置，将宿主机的6379端口映射到容器的6379端口
-- **-v /data/local/redis.conf:/etc/redis/redis.conf**:这是对容器内的文件系统的挂载设置，将宿主机上的 /data/local/redis.conf 文件挂载到容器内的 /etc/redis/redis.conf 位置
-- **-v /data/local/data:/data**:这是另一个文件系统的挂载选项，将宿主机上的 /data/local/data 目录挂载到容器内的 /data目录
-- **-d**:这是 Docker 的分离模式，新创建的进程将会在后台运行
-- **redis redis-server /data/local/redis/redis.conf --appendonly yes --requirepass 123456**:这是容器内要运行的命令，启动 Redis 服务，使用 /data/local/redis/redis.conf 配置文件，设置追加写入(appendonly)为 yes，设置密码为 "123456"     ( 密码可自行更改)
-- **protected-mode no**:关闭protected-mode模式，此时外部网络可以直接访问 (docker貌似自动开启了)
-- **bind 0.0.0.0**:设置所有IP都可以访问 (docker貌似自动开启了)
-
-------
-
-**nginx**
-
-```bash
-mkdir -p /data/local/nginx
-
-docker run --name nginx -d -p 80:80 nginx
-
-docker cp nginx:/etc/nginx/nginx.conf /data/local/nginx
-docker cp nginx:/var/log/nginx /data/local/nginx
-docker cp nginx:/etc/nginx/conf.d /data/local/nginx
-docker cp nginx:/usr/share/nginx/html /data/local/nginx
-
-docker rm -f nginx
-
-docker run \
--p 80:80 \
---name nginx \
---restart=always \
--v /data/local/nginx/nginx.conf:/etc/nginx/nginx.conf \
--v /data/local/nginx/conf.d:/etc/nginx/conf.d \
--v /data/local/nginx/html:/usr/share/nginx/html \
--v /data/local/nginx/log:/var/log/nginx \
--d \
-nginx
-```
-
-------
-
-**nacos**
-
-```bash
-# 第一步：创建conf,logs,data目录
-mkdir -p /data/local/nacos/{conf,logs,data}
-# 启动临时镜像
-docker run -p 8848:8848 --name nacos -d nacos/nacos-server:v2.3.0
-# CP容器的conf,logs,data到宿主
-docker cp nacos:/home/nacos/conf /data/local/nacos
-docker cp nacos:/home/nacos/data /data/local/nacos
-docker cp nacos:/home/nacos/logs /data/local/nacos
-# 赋予文件权限
-chmod 777 /data/local/nacos/{conf,logs,data}
-# 删除容器
-docker rm -f nacos
-
-
-docker run -d --name nacos \
--p 8848:8848  -p 9848:9848 -p 9849:9849 \
---privileged=true \
--e JVM_XMS=256m -e JVM_XMX=256m -e MODE=standalone \
--v /data/local/nacos/logs/:/home/nacos/logs \
--v /data/local/nacos/conf/:/home/nacos/conf/ \
---restart=always nacos/nacos-server:v2.3.0
-
-
-docker restart nacos
-```
-
-------
-
-目前不知道怎么回事，与elasticsearch有关的镜像都拉取不下来这个问题我没办法解决
-
-```bash
-docker pull elasticsearch:7.7.1
- 
-docker pull kibana:7.7.1
-
-
-docker run -d \
---name elasticsearch \
--e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
--e "discovery.type=single-node" \
--e "http.host=0.0.0.0" \
--v /data/local/elasticsearch/data:/usr/share/elasticsearch/data \
--v /data/local/elasticsearch/plugins:/usr/share/elasticsearch/plugins \
--v /data/local/elasticsearch/logs:/usr/share/elasticsearch/logs \
---privileged \
--p 9200:9200 \
--p 9300:9300 \
-elasticsearch:7.7.1
-```
-
-------
-
-------
-
-**RabbitMQ**
-
-```bash
-# 拉取docker镜像
-docker pull rabbitmq:management
-```
-
-```bash
-mkdir -p /data/local/rabbitmq
-```
-
-```bash
-docker run -id --name=rabbitmq \
--v /data/local/rabbitmq:/var/lib/rabbitmq \
--p 15672:15672 -p 5672:5672 \
--e RABBITMQ_DEFAULT_USER=admin \
---restart=always \
--e RABBITMQ_DEFAULT_PASS=admin rabbitmq:management
-```
-
-------
-
-**RockeMq**
-
-```bash
-docker pull apache/rocketmq
-```
+**Docker挂载实例（以mysql为例）：**
 
 ```bash
 docker run -d \
+--name mysql \
 --restart=always \
---name rmqnamesrv \
---privileged=true \
--p 9876:9876 \
--v /usr/local/rocketmq/data/namesrv/logs:/root/logs \
--v /usr/local/rocketmq/data/namesrv/store:/root/store \
--e "MAX_POSSIBLE_HEAP=100000000" \
--e "JAVA_OPT_EXT=-Xms512M -Xmx512M -Xmn128m" \
-apache/rocketmq \
-sh mqnamesrv
+-p 3306:3306 \
+-e TZ=Asia/Shanghai \
+-e MYSQL_ROOT_PASSWORD=123456 \
+-v /data/local/mysql/data:/var/lib/mysql \
+-v /data/local/mysql/conf:/etc/mysql/conf.d \
+mysql:8.0.34
 ```
 
-------
+其中的**-v**就是挂载的目录
 
-**seata**
+- **-v /path/to/mysql:/etc/mysql/conf.d**将主机的 `mysql` 目录挂载到容器内的 `/etc/mysql/conf.d` 目录，
+- **-v /path/to/mysql/data:/var/lib/mysql** 将主机的 `mysql/data` 目录挂载到容器内的 `/var/lib/mysql` 目录，
 
-docker pull seataio/seata-server:1.7.1
+## 五、Docker网络
 
-zipkin
+容器网络实质上是由 Dokcer 为应用程序所创造的虚拟环境的一部分，它能让应用从宿主机操作系统的网络环境中独立出来，形成容器自有的网络设备、IP 协议栈、端口套接字、IP 路由表、防火墙等等与网络相关的模块。
 
-```
-docker pull openzipkin/zipkin
-```
+Docker 为实现容器网络，主要采用的架构由三部分组成：CNM、Libnetwork 和驱动。
 
-**Minio**
+#### **1. CNM**
+
+Docker 网络架构采用的设计规范是 CNM（Container Network Model）：CNM 中规定了 Docker 网络的基础组成要素：Sandbox、Endpoint、Network。如图所示，
+
+![img](https://ask.qcloudimg.com/http-save/yehe-7158674/4abelkv4oi.jpeg)
+
+- Sandbox，提供了容器的虚拟网络栈，也即端口套接字、IP 路由表、防火墙、DNS 配置等内容。主要用于隔离容器网络与宿主机网络，形成了完全独立的容器网络环境。
+- Network，Docker 内部的虚拟子网，网络内的参与者相互可见并能够进行通讯。Docker 的虚拟网路和宿主机网络是存在隔离关系的，其目的主要是形成容器间的安全通讯环境。
+- Endpoint，就是虚拟网络的接口，就像普通网络接口一样，Endpoint 的主要职责是负责创建连接。在 CNM 中，终端负责将沙盒连接到网络。个人理解：Endpoint 与常见的网络适配器类似，也就意味着 Endpoint 只能接入某一个网络。因此，如果容器需要接入到多个网络，就需要多个 Endpoint。
+
+> ★如上图所示（我们将图中的三个容器从左到右依次标记为 1、2、3），那么容器 2 有两个 endpoint 并且分别接入 NetworkdA 和 NetworkB。那么容器 1 和容器 2 是可以实现通信的，因为都接入了 NetworkA。但是容器 3 和容器 1，以及容器 2 的两个 Endpoint 之间是不能通信的，除非有三层路由器的支持。 ”
+
+##### **1.1、Docker 提供三种 user-defined 网络驱动：`bridge`, `overlay` 和 `macvlan`**
+
+**overlay 和 macvlan 用于创建跨主机的网络**
+
+##### 1.2、Docker创建网络常用命令
+
+不指定网络驱动时默认创建的bridge网络
 
 ```bash
-docker pull minio/minio
+docker network create default_network
+```
 
-mkdir -p /data/local/minio/data
-mkdir -p /data/local/minio/config
+查看网络内部信息
 
-docker run -p 9000:9000 -p 9090:9090 \
---name minio \
--d --restart=always \
--e "MINIO_ACCESS_KEY=minioadmin" \
--e "MINIO_SECRET_KEY=minioadmin" \
--v /data/local/minio/data:/data \
--v /data/local/minio/config:/root/.minio \
-minio/minio server /data \
---console-address ":9090" --address ":9000"
+```bash
+docker network inspect default_network
+```
 
- 
+列所有列表的网络
+
+```bash
+docker network ls
+```
+
+移除指定的网络
+
+```bash
+docker network rm default_network
+```
+
+##### 1.3、Docker自定义网络
+
+1.查看所有的docker网络：
+
+```bash
+docker network ls
+```
+
+网络模式
+
+- bridge：桥接docker（默认，自己创建也使用bridge模式）
+- none：不配置网络
+- host：和宿主机共享网络
+- container：容器网络连通（用的少，局限很大）
+
+2.创建自定义网络命令：docker network create default_network
+
+```
+docker network create --driver bridge --subnet 192.168.1.0/16 --gateway 192.168.1.0 mynet
+解析：
+--driver bridge 表示使用桥接模式
+--subnet 192.168.1.0/16 表示子网ip 可以分配 192.168.1.2 到 192.168.255.255
+--gateway 192.168.1.0 表示网关
+mynet 表示网络名
+```
+
+3.查看网络内部信息：docker network inspect default_network
+
+4.移除指定的网络：docker network rm **default_network**
+
+#### 2. Libnetwork**
+
+Libnetwork 是 CNM 的标准实现。Libnetwork 是开源库，采用 Go 语言编写（跨平台的），也是 Docker 所使用的库，Docker 网络架构的核心代码都在这个库中。Libnetwork 实现了 CNM 中定义的全部三个组件，此外它还实现了本地服务发现、基于 Ingress 的容器[负载均衡](https://cloud.tencent.com/product/clb?from_column=20065&from=20065)，以及网络控制层和管理层功能。
+
+## 六、Docker-Compose
+
+##### 1、概述
+
+Compose 是一个用于定义和运行多容器 Docker 应用程序的工具。Compose 用 YAML 文件配置应用程序的服务。使用单一命令，可以从 YAML 文件配置中创建并启动所有服务。适用于所有环境生产、开发、测试以及 CI/CD 工作流程。
+
+Compose的使用三步：
+
+使用 Dockerfile 自定义应用程序的环境，便于在任何地方复制它；
+使用 docker-compose.yml 定义构成的应用程序的服务，便于隔离环境中一起运行；
+运行 docker-compose up 命令启动并运行整个应用程序。
+
+##### 2、Docker Compose与Docker关系
+
+Docker Compose（容器编排工具）
+定义：Docker Compose 是一个用于定义和运行多容器 Docker 应用的工具。
+
+功能：
+
+多容器管理：允许用户在一个YAML文件中定义和管理多个容器
+服务编排：配置容器间的网络和依赖关系
+一键部署：使用docker-compose up命令启动、停止和重建服务
+用途：简化多容器应用的配置和管理，适用于开发、测试和生产环境中的复杂应用。
+
+两者关系：
+Docker 是 Docker Compose 的前提，Docker Compose 是为了简化使用 Docker 时多容器应用的管理和部署而设计的。
+两者之间相辅相成，Docker 提供容器化的核心功能，Docker Compose 则管理这些容器的组合和交互。
+两者面向不同用户，Docker 面向任何需要容器化应用的用户，Docker Compose 则面向需要同时管理多个容器的开发者和运维团队。
+
+##### 3.下载 Docker Compose 2.20
+
+在 CentOS 上，使用以下命令来下载 Docker Compose 2.20：
+
+```bash
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+```
+
+ 赋予执行权限下载完成后，需要给 Docker Compose 文件添加执行权限：
+
+```bash
+sudo chmod +x /usr/local/bin/docker-compose
+```
+
+验证安装,确认 Docker Compose 已经正确安装，并且版本为 2.20：
+
+```bash
+docker-compose --version
+
+# 输出一下内容
+Docker Compose version v2.20.0
+```
+
+##### 4.docker-compose命令
+
+```bash
+# 运行
+docker-compose up -d
+# 停止
+docker-compose down
+```
+
+##### 5.注意事项
+
+当使用docker-compose的相关命令的时候必须在含有docker-compose.yml文件的同一级目录下使用，否则会报错
+
+![15](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/15.png)
+
+##### 6.docker-compose创建容器
+
+```bash
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"  # MinIO Web 界面
+    volumes:
+      - /data/local/minio:/data  # 持久化 MinIO 数据
+    networks:
+      - local-network
+      
+networks:
+  local-network: # 自定义网络名称
+    driver: bridge # 创建统一网络（桥接模式）
+```
+
+##### 7.docker-compose搭建多容器（微服务专用环境）
+
+```bash
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0.34
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root  # 使用官方默认密码
+    ports:
+      - "3306:3306"
+    networks:
+      - local-network
+    volumes:
+      - /data/local/mysql:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - local-network
+    command: ["redis-server", "--requirepass", "redis"]  # 使用默认的 Redis 密码
+    volumes:
+      - /data/local/redis:/data
+
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    container_name: nacos
+    restart: always
+    ports:
+      - 8848:8848
+      - 9848:9848
+    environment:
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=mysql
+      - MYSQL_SERVICE_PORT=3306
+      - MYSQL_SERVICE_DB_NAME=nacos
+      - MYSQL_SERVICE_USER=root
+      - MYSQL_SERVICE_PASSWORD=root  # 使用官方默认密码
+      - MYSQL_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    networks:
+      - local-network
+    volumes:
+      - /data/local/nacos:/home/nacos/data
+
+  sentinel:
+    image: bladex/sentinel-dashboard:latest
+    container_name: sentinel
+    ports:
+      - "8858:8858"
+    networks:
+      - local-network
+    volumes:
+      - /data/local/sentinel:/data
+
+  elasticsearch:
+    image: elasticsearch:7.7.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - local-network
+    volumes:
+      - /data/local/elasticsearch/data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: kibana:7.7.1
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - local-network
+    depends_on:
+      - elasticsearch
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # 默认端口
+      - "15672:15672"  # 管理控制台端口
+    environment:
+      RABBITMQ_DEFAULT_USER: guest  # 使用官方默认用户名
+      RABBITMQ_DEFAULT_PASS: guest  # 使用官方默认密码
+    networks:
+      - local-network
+    volumes:
+      - /data/local/rabbitmq:/var/lib/rabbitmq
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - local-network
+    volumes:
+      - /data/local/minio:/data
+    command: server /data --console-address ":9001"
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    environment:
+      - STORAGE_TYPE=mysql
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASS=root  # 使用官方默认密码
+      - MYSQL_DB=zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - local-network
+    volumes:
+      - /data/local/zipkin:/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - local-network
+    volumes:
+      - /data/local/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /data/local/nginx:/usr/share/nginx/html
+
+  mongo:
+    image: mongo:4.4
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - local-network
+    volumes:
+      - /data/local/mongo:/data/db
+
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    ports:
+      - "7474:7474"  # 浏览器访问端口
+      - "7687:7687"  # Bolt 连接端口
+    networks:
+      - local-network
+    environment:
+      - NEO4J_AUTH=neo4j/neo4j123456  # 使用官方默认用户名和密码
+    volumes:
+      - /data/local/neo4j/data:/data
+      - /data/local/neo4j/logs:/logs
+      - /data/local/neo4j/import:/var/lib/neo4j/import
+      - /data/local/neo4j/conf:/etc/neo4j
+
+networks:
+  local-network:
+    driver: bridge
+
+```
+
+### 访问服务：
+
+1. **MySQL**: `192.168.75.155:3306`
+2. **Redis**: `192.168.75.155:6379`
+3. **Nacos**: `192.168.75.155:8848`（管理界面）
+4. **Sentinel**: `192.168.75.155:8858`
+5. **Elasticsearch**: `192.168.75.155:9200`
+6. **Kibana**: `192.168.75.155:5601`
+7. **RabbitMQ**: `192.168.75.155:15672`（管理控制台）
+8. **MinIO**: `192.168.75.155:9000`（S3 存储）、`192.168.75.155:9001`（管理控制台）
+9. **Zipkin**: `192.168.75.155:9411`（追踪管理界面）
+10. **Nacos**: `192.168.75.155:80`（nginx客户端）
+11. **MongoDb**:`192.168.75.155：27017`
+12. **neo4j**：192.168.75.155：7474
+
+
+
+```bash
+# 解决nacos Public Key Retrieval is not allowed
+docker exec -it mysql bash
+mysql -u root -p
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+
+
+# 解决es权限不足
+chmod -R 1000 /data/local/elasticsearch
 ```
 
 
 
-## 五、Dockerfile使用
+
+
+## 七、Dockerfile使用
 
 **elasticsearch**
 
@@ -861,6 +952,7 @@ ENV http.host=0.0.0.0
 CMD ["bin/elasticsearch"]
 ```
 
+
 ##### 3、在当前目录下运行运行
 
 **/data/local/elasticsearch**   
@@ -889,16 +981,16 @@ curl http://localhost:9200
 http://Docker宿主机 IP:9200/
 ```
 
-------
+****
 
 ![14](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/14.png)
 
 **kibana**
 
-```bash
+````bash
 cd /data/local/kibana/
 tar -zxvf kibana-7.7.1-linux-x86_64.tar.gz
-```
+````
 
 ```bash
 cd /data/local/kibana/
@@ -922,7 +1014,3 @@ docker build -t kibana:7.7.1 .
 ```bash
 docker run -d --name kibana -p 5601:5601 kibana:7.7.1
 ```
-
-## 六、docker网络
-
-**网络看不懂~自个儿学去吧~**
