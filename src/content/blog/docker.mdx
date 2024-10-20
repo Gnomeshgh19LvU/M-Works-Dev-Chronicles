@@ -623,7 +623,7 @@ mynet 表示网络名
 
 4.移除指定的网络：docker network rm **default_network**
 
-#### 2. Libnetwork**
+#### 2. Libnetwork
 
 Libnetwork 是 CNM 的标准实现。Libnetwork 是开源库，采用 Go 语言编写（跨平台的），也是 Docker 所使用的库，Docker 网络架构的核心代码都在这个库中。Libnetwork 实现了 CNM 中定义的全部三个组件，此外它还实现了本地服务发现、基于 Ingress 的容器[负载均衡](https://cloud.tencent.com/product/clb?from_column=20065&from=20065)，以及网络控制层和管理层功能。
 
@@ -901,7 +901,7 @@ networks:
 9. **Zipkin**: `192.168.75.155:9411`（追踪管理界面）
 10. **Nacos**: `192.168.75.155:80`（nginx客户端）
 11. **MongoDb**:`192.168.75.155：27017`
-12. **neo4j**：192.168.75.155：7474
+12. **neo4j**：`192.168.75.155:7474/browser/`
 
 
 
@@ -909,16 +909,113 @@ networks:
 # 解决nacos Public Key Retrieval is not allowed
 docker exec -it mysql bash
 mysql -u root -p
-ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
-
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
+# 用户名和密码根据你自定义啦填写
 
 # 解决es权限不足
-chmod -R 1000 /data/local/elasticsearch
+sudo chown -R 1000:1000 /data/local/elasticsearch/data
+sudo chmod -R 775 /data/local/elasticsearch/data
+
+# 解决MongoDB无法远程连接
+docker exec -it mongo bash
+vim /etc/mongod.conf.orig 
+# 将其中的bindIp: 127.0.0.1注释掉# bindIp: 127.0.0.1 或者改成bindIp: 0.0.0.0 即可开启远程连接
+
+# 解决rabbitmq无法启动（权限不足）
+echo "YOUR_SECRET_COOKIE" | sudo tee /data/local/rabbitmq/.erlang.cookie
+sudo chmod 400 /data/local/rabbitmq/.erlang.cookie
+sudo chown 1000:1000 /data/local/rabbitmq/.erlang.cookie
+
+```
+
+**解决nginx找不到nginx.conf和index.html**
+
+```bash
+vim /data/lcoal/nginx/nginx.conf
+# 将一下内容粘贴（官方nginx.conf配置文件）
+user  nginx;
+worker_processes  auto;
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    tcp_nopush      on;
+    tcp_nodelay     on;
+    keepalive_timeout  65;
+    types_hash_max_size 2048;
+
+    include /etc/nginx/conf.d/*.conf;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        # 根目录设置为默认的html路径
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+
+        location / {
+            try_files $uri $uri/ =404;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+    }
+}
+
+vim /data/lcoal/nginx/index.html
+# 将一下内容粘贴值index.html（官方index.html文件）
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome to nginx!</title>
+    <style>
+        body {
+            width: 35em;
+            margin: 0 auto;
+            font-family: Tahoma, Verdana, Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
 ```
 
 
 
 
+
+
+
+**以下就完成了数据环境的配置啦（大约两个半小时）**
+
+![](https://maaaa.oss-cn-nanjing.aliyuncs.com/docker/16.png)
 
 ## 七、Dockerfile使用
 
@@ -1014,3 +1111,6 @@ docker build -t kibana:7.7.1 .
 ```bash
 docker run -d --name kibana -p 5601:5601 kibana:7.7.1
 ```
+
+
+
