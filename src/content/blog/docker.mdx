@@ -899,7 +899,7 @@ networks:
 7. **RabbitMQ**: `192.168.75.155:15672`（管理控制台）
 8. **MinIO**: `192.168.75.155:9000`（S3 存储）、`192.168.75.155:9001`（管理控制台）
 9. **Zipkin**: `192.168.75.155:9411`（追踪管理界面）
-10. **Nacos**: `192.168.75.155:80`（nginx客户端）
+10. **Nginx**: `192.168.75.155:80`（Nginx客户端）
 11. **MongoDb**:`192.168.75.155：27017`
 12. **neo4j**：`192.168.75.155:7474/browser/`
 
@@ -932,7 +932,7 @@ sudo chown 1000:1000 /data/local/rabbitmq/.erlang.cookie
 
 ```bash
 vim /data/lcoal/nginx/nginx.conf
-# 将一下内容粘贴（官方nginx.conf配置文件）
+# 将以下内容粘贴（官方nginx.conf配置文件）
 user  nginx;
 worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
@@ -980,7 +980,7 @@ http {
 }
 
 vim /data/lcoal/nginx/index.html
-# 将一下内容粘贴值index.html（官方index.html文件）
+# 将以下内容粘贴值index.html（官方index.html文件）
 <!DOCTYPE html>
 <html>
 <head>
