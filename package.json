@@ -37,6 +37,7 @@
     "mdast-util-to-string": "^4.0.0",
     "medium-zoom": "^1.1.0",
     "pagefind": "^1.1.1",
+    "pnpm": "^9.12.3",
     "prismjs": "^1.29.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
